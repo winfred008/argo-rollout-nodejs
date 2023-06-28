@@ -6,12 +6,12 @@ pipeline {
      }
     environment {
     DOCKERHUB_CREDENTIALS = credentials('karo-dockerhub')
-    APP_NAME = "ooghenekaro/amazon"
+    APP_NAME = "ooghenekaro/argo-rollout"
     }
     stages { 
         stage('SCM Checkout') {
             steps{
-           git branch: 'main', url: 'https://github.com/ooghenekaro/Amazon-clone-Dockerized.git'
+           git branch: 'main', url: 'https://github.com/ooghenekaro/Argo-rollout-nodejs.git'
             }
         }
         // run sonarqube test
@@ -47,15 +47,17 @@ pipeline {
         }
         stage('Trigger ManifestUpdate') {
              steps{
-                build job: 'argocd-manifest-amazon', parameters: [string(name: 'DOCKERTAG', value: env.BUILD_NUMBER)]     
+                build job: 'rollout-manifests', parameters: [string(name: 'DOCKERTAG', value: env.BUILD_NUMBER)]     
 
             } 
            } 
         }
-    post { 
-        always { 
-           //slackSend message: 'Pipeline completed - Build deployed successfully '
-           slackSend color: "good", message: "Build Deployed Successfully, Downstream Job Triggered"
-           }
+    post {
+    success {
+      slackSend color: '#36a64f', message: "Deployment of myapp to production succeeded!"
     }
+    failure {
+      slackSend color: '#ff0000', message: "Deployment of myapp to production failed!"
+    }
+  }
 }
